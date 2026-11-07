@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- monitor body -->
+    <path
+        android:pathData="M30,34 L78,34 Q82,34 82,38 L82,64 Q82,68 78,68 L30,68 Q26,68 26,64 L26,38 Q26,34 30,34 Z"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="26" android:startY="34" android:endX="82" android:endY="68"
+                android:type="linear">
+                <item android:color="#FF22D3EE" android:offset="0" />
+                <item android:color="#FF8B5CF6" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- screen glow -->
+    <path
+        android:pathData="M31,39 L77,39 L77,63 L31,63 Z"
+        android:fillColor="#3322D3EE" />
+    <!-- stand -->
+    <path
+        android:pathData="M48,68 L60,68 L62,76 L46,76 Z"
+        android:fillColor="#FF22D3EE" />
+    <path
+        android:pathData="M40,77 L68,77"
+        android:strokeColor="#FF8B5CF6"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round" />
+    <!-- pulse line on the screen -->
+    <path
+        android:pathData="M33,52 L42,52 L46,44 L51,59 L55,48 L58,52 L75,52"
+        android:strokeColor="#FFE6FBFF"
+        android:strokeWidth="2.4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

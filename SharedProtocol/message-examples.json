@@ -1,0 +1,33 @@
+{
+  "_comment": "Examples of protocol v1 messages. See protocol-spec.md. Replies are shown after the request they answer.",
+  "pairing": [
+    { "dir": "phone->pc", "message": { "version": 1, "type": "auth.pair", "requestId": "r1", "payload": { "code": "12345678", "deviceName": "Pixel 8", "deviceModel": "Google Pixel 8" } } },
+    { "dir": "pc->phone", "message": { "version": 1, "type": "response", "requestId": "r1", "payload": { "deviceId": "3f0c9e1a5d2b4c7e8a1b6d9f0e2c4a7b", "token": "<256-bit random token, shown once>", "permissions": ["monitoring", "terminal", "launch", "power", "admin"], "computerName": "DESKTOP-EXAMPLE", "serverVersion": "1.0.0", "sessionExpiresUtc": "2026-11-08T08:00:00.0000000Z", "protocol": 1 } }
+  ],
+  "login": [
+    { "dir": "phone->pc", "message": { "version": 1, "type": "auth.login", "requestId": "r1", "payload": { "deviceId": "3f0c9e1a5d2b4c7e8a1b6d9f0e2c4a7b", "token": "<stored token>" } } }
+  ],
+  "monitoring": [
+    { "dir": "phone->pc", "message": { "version": 1, "type": "monitor.subscribe", "requestId": "r2" } },
+    { "dir": "pc->phone (push, every ~1.5 s)", "message": { "version": 1, "type": "monitor.snapshot", "payload": { "snapshot": { "timeUtc": "2026-11-07T19:30:00Z", "uptimeSeconds": 5400, "cpu": { "model": "Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz", "usage": 12.5, "cores": [10.1, 14.0, 9.5, 20.2, 8.0, 11.3, 15.4, 12.0], "logicalCores": 8, "physicalCores": 4, "frequencyMhz": 3401 }, "gpus": [{ "name": "NVIDIA GeForce RTX 4060", "vendor": "NVIDIA", "usage": 7, "vramUsedMb": 3439, "vramTotalMb": 8188, "vramPercent": 42, "temperatureC": 50 }], "ram": { "totalBytes": 34300000000, "usedBytes": 20900000000, "availableBytes": 13400000000, "percent": 61 }, "disks": [{ "id": "C:", "label": "System", "fileSystem": "NTFS", "model": "Samsung SSD 870 EVO 500GB", "totalBytes": 499000000000, "usedBytes": 163000000000, "freeBytes": 336000000000, "percent": 32.7, "readBps": 0, "writeBps": 0 }] } } } }
+  ],
+  "terminal": [
+    { "dir": "phone->pc", "message": { "version": 1, "type": "terminal.open", "requestId": "r3", "payload": { "shell": "powershell", "cols": 80, "rows": 30 } } },
+    { "dir": "phone->pc", "message": { "version": 1, "type": "terminal.execute", "requestId": "r4", "payload": { "shell": "powershell", "command": "Get-Process" } } },
+    { "dir": "phone->pc", "message": { "version": 1, "type": "terminal.interrupt", "requestId": "r5", "payload": { "shell": "powershell" } } },
+    { "dir": "pc->phone (push)", "message": { "version": 1, "type": "terminal.output", "payload": { "shell": "powershell", "seq": 12, "full": false, "running": true, "title": "Windows PowerShell", "cols": 80, "rows": 30, "cursor": { "x": 36, "y": 4, "visible": true }, "alt": false, "scrollbackTotal": 0, "scrollbackStart": 0, "addedFrom": 0, "added": [], "screen": [[["PS C:\\Users\\me> ", 16777215, -1, 0], ["Get-Process", -1, -1, 0]], []] } } }
+  ],
+  "power": [
+    { "dir": "phone->pc", "message": { "version": 1, "type": "power.request", "requestId": "r6", "payload": { "action": "restart", "delaySeconds": 30 } } },
+    { "dir": "pc->phone", "message": { "version": 1, "type": "response", "requestId": "r6", "payload": { "confirmationToken": "A1B2C3D4E5F60718293A4B5C6D7E8F90", "action": "restart", "delaySeconds": 30, "expiresInSeconds": 30 } } },
+    { "dir": "phone->pc", "message": { "version": 1, "type": "power.confirm", "requestId": "r7", "payload": { "token": "A1B2C3D4E5F60718293A4B5C6D7E8F90" } } },
+    { "dir": "phone->pc", "message": { "version": 1, "type": "power.cancel", "requestId": "r8" } }
+  ],
+  "shortcuts": [
+    { "dir": "phone->pc", "message": { "version": 1, "type": "shortcuts.save", "requestId": "r9", "payload": { "shortcut": { "name": "Notepad", "description": "Text editor", "icon": "code", "path": "notepad.exe", "arguments": "", "workingDirectory": "", "runMode": "normal", "confirm": false } } } },
+    { "dir": "phone->pc", "message": { "version": 1, "type": "shortcuts.run", "requestId": "r10", "payload": { "id": "<shortcut id>", "confirmed": true } } }
+  ],
+  "errors": [
+    { "dir": "pc->phone", "message": { "version": 1, "type": "error", "requestId": "r11", "payload": { "code": "forbidden", "message": "This device does not have the 'terminal' permission." } } }
+  ]
+}

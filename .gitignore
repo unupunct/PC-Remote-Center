@@ -1,0 +1,23 @@
+# build output
+bin/
+obj/
+dist/
+.vs/
+*.user
+# local toolchain (downloaded Gradle etc.)
+.tools/
+# Android
+AndroidClient/.gradle/
+AndroidClient/build/
+AndroidClient/app/build/
+AndroidClient/local.properties
+AndroidClient/keystore.properties
+*.jks
+*.keystore
+.idea/
+*.iml
+# secrets / personal data - never commit
+*.pfx
+*.dpapi
+pcremote.db*
+screenshots-raw/

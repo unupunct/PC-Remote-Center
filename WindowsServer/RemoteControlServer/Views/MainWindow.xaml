@@ -1,0 +1,389 @@
+<Window x:Class="RemoteControlServer.App.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:RemoteControlServer.App.Controls"
+        Title="PC Remote Center — Server" Width="1220" Height="800" MinWidth="980" MinHeight="620"
+        Background="{StaticResource BgBrush}" WindowStartupLocation="CenterScreen" FontFamily="Segoe UI">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="230"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= navigation ================= -->
+        <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+            <DockPanel Margin="14">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,6,0,22">
+                    <Border Width="38" Height="38" CornerRadius="10" Background="{StaticResource AccentGradient}">
+                        <TextBlock Text="⌂" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+                    </Border>
+                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="PC Remote Center" FontWeight="SemiBold" FontSize="15"/>
+                        <TextBlock Text="Server" Style="{StaticResource Muted}" FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+                <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Padding="12" Margin="0,10,0,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="10" Height="10" Fill="{Binding StateBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding StateText}" Margin="8,0,0,0" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Muted}" FontSize="12" Margin="0,4,0,0">
+                            <Run Text="{Binding ClientCount, Mode=OneWay}"/><Run Text=" device(s) connected"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+                <StackPanel>
+                    <RadioButton x:Name="navOverview" Style="{StaticResource NavButton}" Content="◧   Overview" GroupName="nav" Checked="OnNav" IsChecked="True" Tag="PageOverview"/>
+                    <RadioButton Style="{StaticResource NavButton}" Content="▦   Hardware" GroupName="nav" Checked="OnNav" Tag="PageHardware"/>
+                    <RadioButton Style="{StaticResource NavButton}" Content="▣   Terminal Sessions" GroupName="nav" Checked="OnNav" Tag="PageTerminals"/>
+                    <RadioButton Style="{StaticResource NavButton}" Content="☎   Connected Devices" GroupName="nav" Checked="OnNav" Tag="PageDevices"/>
+                    <RadioButton Style="{StaticResource NavButton}" Content="★   Shortcuts" GroupName="nav" Checked="OnNav" Tag="PageShortcuts"/>
+                    <RadioButton Style="{StaticResource NavButton}" Content="≣   Activity Logs" GroupName="nav" Checked="OnNav" Tag="PageLogs"/>
+                    <RadioButton Style="{StaticResource NavButton}" Content="⇄   Network Settings" GroupName="nav" Checked="OnNav" Tag="PageNetwork"/>
+                    <RadioButton Style="{StaticResource NavButton}" Content="⚿   Security &amp; Settings" GroupName="nav" Checked="OnNav" Tag="PageSecurity"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Column="1" Margin="26,22,26,18">
+
+            <!-- ================= OVERVIEW ================= -->
+            <ScrollViewer x:Name="PageOverview" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="Overview" Style="{StaticResource H1}"/>
+                    <TextBlock Text="Live status of this PC and the remote-control server" Style="{StaticResource Muted}" Margin="0,2,0,16"/>
+                    <Border Style="{StaticResource Card}">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="14" Height="14" Fill="{Binding StateBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding StateText}" Style="{StaticResource H2}" FontSize="20" Margin="10,0,0,0"/>
+                                    <TextBlock Text="{Binding Uptime}" Style="{StaticResource Muted}" Margin="14,4,0,0"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Endpoint}" Style="{StaticResource Muted}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding Traffic}" Margin="0,8,0,0" FontFamily="Consolas"/>
+                                <TextBlock Text="{Binding Totals}" Style="{StaticResource Muted}" FontSize="12"/>
+                                <TextBlock Text="{Binding ServerError}" Foreground="{StaticResource RedBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                                <Button x:Name="btnStart" Content="Start" Style="{StaticResource Primary}" Margin="0,0,8,0" Click="OnStartServer" IsEnabled="{Binding CanStart}"/>
+                                <Button x:Name="btnRestart" Content="Restart" Margin="0,0,8,0" Click="OnRestartServer" IsEnabled="{Binding CanStop}"/>
+                                <Button x:Name="btnStop" Content="Stop" Style="{StaticResource Danger}" Click="OnStopServer" IsEnabled="{Binding CanStop}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <UniformGrid Columns="4" Margin="0,14,0,0">
+                        <Border Style="{StaticResource Card}" Margin="0,0,10,0">
+                            <StackPanel><TextBlock Text="CPU" Style="{StaticResource H2}"/>
+                                <c:Gauge Value="{Binding Cpu}" Width="130" Height="130" Margin="0,8"/>
+                                <TextBlock Text="{Binding CpuModel}" Style="{StaticResource Muted}" TextTrimming="CharacterEllipsis" FontSize="12"/></StackPanel></Border>
+                        <Border Style="{StaticResource Card}" Margin="5,0,5,0">
+                            <StackPanel><TextBlock Text="GPU" Style="{StaticResource H2}"/>
+                                <c:Gauge Value="{Binding Gpu}" Width="130" Height="130" Margin="0,8"/>
+                                <TextBlock Text="{Binding GpuModel}" Style="{StaticResource Muted}" TextTrimming="CharacterEllipsis" FontSize="12"/></StackPanel></Border>
+                        <Border Style="{StaticResource Card}" Margin="5,0,5,0">
+                            <StackPanel><TextBlock Text="RAM" Style="{StaticResource H2}"/>
+                                <c:Gauge Value="{Binding Ram}" Width="130" Height="130" Margin="0,8"/>
+                                <TextBlock Text="{Binding RamDetail}" Style="{StaticResource Muted}" TextTrimming="CharacterEllipsis" FontSize="12"/></StackPanel></Border>
+                        <Border Style="{StaticResource Card}" Margin="10,0,0,0">
+                            <StackPanel><TextBlock Text="DISK" Style="{StaticResource H2}"/>
+                                <c:Gauge Value="{Binding DiskPct}" Width="130" Height="130" Margin="0,8"/>
+                                <TextBlock Text="{Binding DiskDetail}" Style="{StaticResource Muted}" TextTrimming="CharacterEllipsis" FontSize="12"/></StackPanel></Border>
+                    </UniformGrid>
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <Border Style="{StaticResource Card}" Margin="0,0,7,0">
+                            <StackPanel>
+                                <TextBlock Text="Connected devices" Style="{StaticResource H2}" Margin="0,0,0,8"/>
+                                <ItemsControl ItemsSource="{Binding Connected}">
+                                    <ItemsControl.ItemTemplate><DataTemplate>
+                                        <StackPanel Margin="0,4"><TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                            <TextBlock Style="{StaticResource Muted}" FontSize="12"><Run Text="{Binding Ip, Mode=OneWay}"/><Run Text="  since "/><Run Text="{Binding Since, Mode=OneWay}"/></TextBlock></StackPanel>
+                                    </DataTemplate></ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Text="No device connected" Style="{StaticResource Muted}" Visibility="{Binding NoClientsVisibility}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource Card}" Margin="7,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Recent actions" Style="{StaticResource H2}" Margin="0,0,0,8"/>
+                                <ItemsControl ItemsSource="{Binding RecentActions}">
+                                    <ItemsControl.ItemTemplate><DataTemplate>
+                                        <StackPanel Margin="0,3"><TextBlock FontSize="13"><Run Text="{Binding Actor, Mode=OneWay}" FontWeight="SemiBold"/><Run Text="  "/><Run Text="{Binding Action, Mode=OneWay}"/></TextBlock>
+                                            <TextBlock Text="{Binding Time}" Style="{StaticResource Muted}" FontSize="11"/></StackPanel>
+                                    </DataTemplate></ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================= HARDWARE ================= -->
+            <ScrollViewer x:Name="PageHardware" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="Hardware" Style="{StaticResource H1}"/>
+                    <TextBlock Text="Real readings from Windows performance counters and LibreHardwareMonitor. Unavailable sensors show n/a." Style="{StaticResource Muted}" Margin="0,2,0,16"/>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                            <c:Gauge Value="{Binding Cpu}" Label="CPU" Width="150" Height="150"/>
+                            <StackPanel Grid.Column="1"><TextBlock Text="{Binding CpuModel}" Style="{StaticResource H2}"/>
+                                <TextBlock Text="{Binding CpuDetail}" Style="{StaticResource Muted}" Margin="0,2,0,8" TextWrapping="Wrap"/>
+                                <c:Sparkline Samples="{Binding CpuHistory}" Height="80" Stroke="{StaticResource CyanBrush}"/></StackPanel></Grid></Border>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <StackPanel><TextBlock Text="CPU cores" Style="{StaticResource H2}" Margin="0,0,0,8"/>
+                            <ItemsControl ItemsSource="{Binding Cores}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate><StackPanel Margin="0,0,14,8">
+                                    <DockPanel><TextBlock Text="{Binding Name}" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Text}" HorizontalAlignment="Right" FontSize="12"/></DockPanel>
+                                    <ProgressBar Value="{Binding Value, Mode=OneWay}" Maximum="100" Height="6" Foreground="{StaticResource CyanBrush}" Background="{StaticResource PanelBrush}" BorderThickness="0"/></StackPanel></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></StackPanel></Border>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                            <c:Gauge Value="{Binding Gpu}" Label="GPU" Width="150" Height="150"/>
+                            <StackPanel Grid.Column="1"><TextBlock Text="{Binding GpuModel}" Style="{StaticResource H2}"/>
+                                <TextBlock Text="{Binding GpuDetail}" Style="{StaticResource Muted}" Margin="0,2,0,8" TextWrapping="Wrap"/>
+                                <c:Sparkline Samples="{Binding GpuHistory}" Height="80" Stroke="{StaticResource PurpleBrush}"/></StackPanel></Grid></Border>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                            <c:Gauge Value="{Binding Ram}" Label="RAM" Width="150" Height="150"/>
+                            <StackPanel Grid.Column="1"><TextBlock Text="Memory" Style="{StaticResource H2}"/>
+                                <TextBlock Text="{Binding RamDetail}" Style="{StaticResource Muted}" Margin="0,2,0,8" TextWrapping="Wrap"/>
+                                <c:Sparkline Samples="{Binding RamHistory}" Height="80" Stroke="{StaticResource BlueBrush}"/></StackPanel></Grid></Border>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel><TextBlock Text="Disks" Style="{StaticResource H2}" Margin="0,0,0,8"/>
+                            <ItemsControl ItemsSource="{Binding Disks}"><ItemsControl.ItemTemplate><DataTemplate><StackPanel Margin="0,0,0,12">
+                                <DockPanel><TextBlock Text="{Binding Title}" FontWeight="SemiBold"/><TextBlock Text="{Binding Temp}" HorizontalAlignment="Right" Style="{StaticResource Muted}"/></DockPanel>
+                                <ProgressBar Value="{Binding Percent, Mode=OneWay}" Maximum="100" Height="8" Margin="0,5" Foreground="{StaticResource CyanBrush}" Background="{StaticResource PanelBrush}" BorderThickness="0"/>
+                                <TextBlock Text="{Binding Capacity}" Style="{StaticResource Muted}" FontSize="12"/>
+                                <TextBlock Text="{Binding Speed}" Style="{StaticResource Muted}" FontSize="12"/></StackPanel></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></StackPanel></Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================= TERMINALS ================= -->
+            <ScrollViewer x:Name="PageTerminals" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="Terminal Sessions" Style="{StaticResource H1}"/>
+                    <TextBlock Text="Two persistent shells hosted in Windows ConPTY. The same session is shown in the window here and on the phone." Style="{StaticResource Muted}" Margin="0,2,0,16" TextWrapping="Wrap"/>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel><TextBlock Text="Command Prompt (cmd.exe)" Style="{StaticResource H2}"/>
+                                <TextBlock x:Name="txtCmdStatus" Style="{StaticResource Muted}" Margin="0,4,0,0"/></StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="Show window" Margin="0,0,8,0" Tag="cmd" Click="OnShowTerminal"/>
+                                <Button x:Name="btnCmdRestart" Content="Start" Style="{StaticResource Primary}" Tag="cmd" Click="OnRestartTerminal"/></StackPanel></Grid></Border>
+                    <Border Style="{StaticResource Card}">
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel><TextBlock Text="Windows PowerShell (powershell.exe)" Style="{StaticResource H2}"/>
+                                <TextBlock x:Name="txtPsStatus" Style="{StaticResource Muted}" Margin="0,4,0,0"/></StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="Show window" Margin="0,0,8,0" Tag="powershell" Click="OnShowTerminal"/>
+                                <Button x:Name="btnPsRestart" Content="Start" Style="{StaticResource Primary}" Tag="powershell" Click="OnRestartTerminal"/></StackPanel></Grid></Border>
+                    <TextBlock Margin="0,14,0,0" Style="{StaticResource Muted}" TextWrapping="Wrap"
+                               Text="Shells run as your normal Windows user. They are never elevated automatically. Restarting a session ends its running programs and starts a fresh shell."/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================= DEVICES ================= -->
+            <ScrollViewer x:Name="PageDevices" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="Connected Devices" Style="{StaticResource H1}"/>
+                    <TextBlock Text="Pair a phone with a one-time code or QR code, choose what it may do, and revoke access at any time." Style="{StaticResource Muted}" Margin="0,2,0,16"/>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="260"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Pair a new device" Style="{StaticResource H2}"/>
+                                <TextBlock Text="This device will be allowed to:" Style="{StaticResource Muted}" Margin="0,8,0,4"/>
+                                <CheckBox x:Name="chkMon" Content="Monitoring (read-only hardware data)" IsChecked="True"/>
+                                <CheckBox x:Name="chkTerm" Content="Terminal access (run commands in CMD / PowerShell)" IsChecked="True"/>
+                                <CheckBox x:Name="chkLaunch" Content="Launch applications / shortcuts" IsChecked="True"/>
+                                <CheckBox x:Name="chkPower" Content="Shutdown / restart / lock / sleep" IsChecked="True"/>
+                                <CheckBox x:Name="chkAdmin" Content="Administrative actions (edit shortcuts, elevated launches if enabled)" IsChecked="True"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                    <Button Content="Generate pairing code" Style="{StaticResource Primary}" Click="OnCreatePairing"/>
+                                    <Button Content="Cancel code" Margin="8,0,0,0" Click="OnCancelPairing"/></StackPanel>
+                                <TextBlock Text="{Binding PairInfo}" Style="{StaticResource Muted}" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding PairCode}" FontSize="40" FontWeight="Bold" FontFamily="Consolas" Foreground="{StaticResource CyanBrush}" Margin="0,4,0,0"/>
+                                <TextBlock Text="Certificate fingerprint (SHA-256) — compare on the phone if you pair without the QR code:" Style="{StaticResource Muted}" FontSize="11" Margin="0,10,0,2" TextWrapping="Wrap"/>
+                                <TextBox Text="{Binding Fingerprint, Mode=OneWay}" IsReadOnly="True" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="#0B0C10" CornerRadius="12" Padding="10" Height="240" VerticalAlignment="Top">
+                                <Grid><Image Source="{Binding PairQr}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                                    <TextBlock Text="QR code appears here" Style="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding NoQrVisibility}"/></Grid></Border>
+                        </Grid></Border>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Paired devices" Style="{StaticResource H2}" Margin="0,0,0,8"/>
+                            <DataGrid x:Name="gridDevices" ItemsSource="{Binding Devices}" MinHeight="120" MaxHeight="260">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
+                                    <DataGridTextColumn Header="Permissions" Binding="{Binding Permissions}" Width="2*"/>
+                                    <DataGridTextColumn Header="Last seen" Binding="{Binding LastSeen}" Width="140"/>
+                                    <DataGridTextColumn Header="Last IP" Binding="{Binding LastIp}" Width="110"/>
+                                </DataGrid.Columns></DataGrid>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <Button Content="Edit permissions…" Click="OnEditPermissions"/>
+                                <Button Content="Revoke access" Style="{StaticResource Danger}" Margin="8,0,0,0" Click="OnRevokeDevice"/>
+                                <Button Content="Remove from list" Margin="8,0,0,0" Click="OnDeleteDevice"/></StackPanel>
+                        </StackPanel></Border>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Active connections" Style="{StaticResource H2}" Margin="0,0,0,8"/>
+                            <DataGrid x:Name="gridConnected" ItemsSource="{Binding Connected}" MinHeight="70" MaxHeight="200">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Device" Binding="{Binding Name}" Width="*"/>
+                                    <DataGridTextColumn Header="IP" Binding="{Binding Ip}" Width="130"/>
+                                    <DataGridTextColumn Header="Since" Binding="{Binding Since}" Width="90"/>
+                                    <DataGridTextColumn Header="Permissions" Binding="{Binding Permissions}" Width="2*"/>
+                                </DataGrid.Columns></DataGrid>
+                            <Button Content="Disconnect selected" Margin="0,10,0,0" HorizontalAlignment="Left" Click="OnDisconnect"/>
+                        </StackPanel></Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================= SHORTCUTS ================= -->
+            <Grid x:Name="PageShortcuts" Visibility="Collapsed">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
+                <StackPanel><TextBlock Text="Shortcuts" Style="{StaticResource H1}"/>
+                    <TextBlock Text="Programs the phone may start. Only .exe, .msc, .cpl, .lnk files and ms-settings: links are allowed; arguments are never passed through a shell." Style="{StaticResource Muted}" Margin="0,2,0,14" TextWrapping="Wrap"/></StackPanel>
+                <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="380"/></Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Card}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,10,0,0">
+                                <Button Content="▲ Up" Click="OnShortcutUp"/><Button Content="▼ Down" Margin="8,0,0,0" Click="OnShortcutDown"/>
+                                <Button Content="Run on this PC" Margin="8,0,0,0" Click="OnShortcutTest"/>
+                                <Button Content="Delete" Style="{StaticResource Danger}" Margin="8,0,0,0" Click="OnShortcutDelete"/></StackPanel>
+                            <DataGrid x:Name="gridShortcuts" ItemsSource="{Binding Shortcuts}" SelectionChanged="OnShortcutSelected">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="Target" Binding="{Binding Path}" Width="2*"/>
+                                    <DataGridTextColumn Header="Mode" Binding="{Binding RunMode}" Width="85"/>
+                                    <DataGridCheckBoxColumn Header="Confirm" Binding="{Binding Confirm, Mode=OneWay}" Width="70"/>
+                                </DataGrid.Columns></DataGrid>
+                        </DockPanel></Border>
+                    <Border Grid.Column="2" Style="{StaticResource Card}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
+                            <TextBlock x:Name="txtShortcutTitle" Text="New shortcut" Style="{StaticResource H2}" Margin="0,0,0,10"/>
+                            <TextBlock Text="Name" Style="{StaticResource Muted}"/><TextBox x:Name="scName" Margin="0,2,0,8"/>
+                            <TextBlock Text="Description" Style="{StaticResource Muted}"/><TextBox x:Name="scDesc" Margin="0,2,0,8"/>
+                            <TextBlock Text="Icon (apps, monitor, memory, settings, list, network, chart, web, code, build)" Style="{StaticResource Muted}" TextWrapping="Wrap"/><TextBox x:Name="scIcon" Text="apps" Margin="0,2,0,8"/>
+                            <TextBlock Text="Program (full path or name such as taskmgr.exe)" Style="{StaticResource Muted}"/>
+                            <DockPanel Margin="0,2,0,8"><Button DockPanel.Dock="Right" Content="Browse…" Margin="6,0,0,0" Click="OnBrowseShortcut"/><TextBox x:Name="scPath"/></DockPanel>
+                            <TextBlock Text="Arguments (optional)" Style="{StaticResource Muted}"/><TextBox x:Name="scArgs" Margin="0,2,0,8"/>
+                            <TextBlock Text="Working directory (optional)" Style="{StaticResource Muted}"/><TextBox x:Name="scDir" Margin="0,2,0,8"/>
+                            <TextBlock Text="Run mode" Style="{StaticResource Muted}"/>
+                            <WrapPanel Margin="0,2,0,8">
+                                <RadioButton x:Name="rmNormal" Content="normal" GroupName="rm" IsChecked="True" Foreground="{StaticResource TextBrush}" Margin="0,0,12,0"/>
+                                <RadioButton x:Name="rmMin" Content="minimized" GroupName="rm" Foreground="{StaticResource TextBrush}" Margin="0,0,12,0"/>
+                                <RadioButton x:Name="rmMax" Content="maximized" GroupName="rm" Foreground="{StaticResource TextBrush}" Margin="0,0,12,0"/>
+                                <RadioButton x:Name="rmHidden" Content="hidden" GroupName="rm" Foreground="{StaticResource TextBrush}" Margin="0,0,12,0"/>
+                                <RadioButton x:Name="rmElev" Content="elevated (UAC prompt)" GroupName="rm" Foreground="{StaticResource TextBrush}"/></WrapPanel>
+                            <CheckBox x:Name="scConfirm" Content="Ask for confirmation on the phone before running"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <Button Content="Save" Style="{StaticResource Primary}" Click="OnShortcutSave"/>
+                                <Button Content="New" Margin="8,0,0,0" Click="OnShortcutNew"/></StackPanel>
+                            <TextBlock x:Name="txtShortcutMsg" Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{StaticResource AmberBrush}"/>
+                        </StackPanel></ScrollViewer></Border>
+                </Grid>
+            </Grid>
+
+            <!-- ================= LOGS ================= -->
+            <Grid x:Name="PageLogs" Visibility="Collapsed">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="2*"/><RowDefinition Height="10"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <StackPanel><TextBlock Text="Activity Logs" Style="{StaticResource H1}"/>
+                    <TextBlock Text="Audit trail of administrative actions. Passwords, tokens and command contents are never logged." Style="{StaticResource Muted}" Margin="0,2,0,12"/></StackPanel>
+                <DockPanel Grid.Row="1" Margin="0,0,0,8">
+                    <Button DockPanel.Dock="Right" Content="Export CSV…" Margin="8,0,0,0" Click="OnExportLog"/>
+                    <Button DockPanel.Dock="Right" Content="Refresh" Margin="8,0,0,0" Click="OnRefreshLog"/>
+                    <TextBox x:Name="logFilter" TextChanged="OnLogFilter" ToolTip="Filter by device, action or detail"/></DockPanel>
+                <Border Grid.Row="2" Style="{StaticResource Card}" Padding="6">
+                    <DataGrid x:Name="gridAudit" ItemsSource="{Binding Audit}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="160"/>
+                            <DataGridTextColumn Header="Actor" Binding="{Binding Actor}" Width="140"/>
+                            <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="160"/>
+                            <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="*"/>
+                            <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="70"/>
+                        </DataGrid.Columns></DataGrid></Border>
+                <Border Grid.Row="4" Style="{StaticResource Card}" Padding="6">
+                    <DockPanel><TextBlock DockPanel.Dock="Top" Text="Connection history" Style="{StaticResource H2}" Margin="8,4,0,6"/>
+                        <DataGrid ItemsSource="{Binding History}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Connected" Binding="{Binding Time}" Width="170"/>
+                                <DataGridTextColumn Header="Device" Binding="{Binding Device}" Width="*"/>
+                                <DataGridTextColumn Header="IP" Binding="{Binding Ip}" Width="130"/>
+                                <DataGridTextColumn Header="Duration" Binding="{Binding Duration}" Width="100"/>
+                            </DataGrid.Columns></DataGrid></DockPanel></Border>
+            </Grid>
+
+            <!-- ================= NETWORK ================= -->
+            <ScrollViewer x:Name="PageNetwork" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <StackPanel MaxWidth="820" HorizontalAlignment="Left">
+                    <TextBlock Text="Network Settings" Style="{StaticResource H1}"/>
+                    <TextBlock Text="LAN-only by default. Use a VPN for remote access — never expose this port directly to the internet." Style="{StaticResource Muted}" Margin="0,2,0,16" TextWrapping="Wrap"/>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12"><StackPanel>
+                        <TextBlock Text="Listening" Style="{StaticResource H2}" Margin="0,0,0,8"/>
+                        <TextBlock Text="TCP port (TLS WebSocket)" Style="{StaticResource Muted}"/><TextBox x:Name="netPort" Width="120" HorizontalAlignment="Left" Margin="0,2,0,8"/>
+                        <CheckBox x:Name="netDiscovery" Content="Answer LAN discovery requests (UDP port 47822) so phones can find this PC"/>
+                        <CheckBox x:Name="netLanOnly" Content="Accept connections from the local network only (private ranges + loopback)"/>
+                        <TextBlock Text="Extra allowed networks (CIDR, comma separated — e.g. your VPN subnet 10.8.0.0/24 or Tailscale 100.64.0.0/10)" Style="{StaticResource Muted}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                        <TextBox x:Name="netExtra" Margin="0,2,0,8"/>
+                        <TextBlock Text="Computer name shown on the phone" Style="{StaticResource Muted}"/><TextBox x:Name="netName" Margin="0,2,0,8"/>
+                        <StackPanel Orientation="Horizontal"><Button Content="Save and restart server" Style="{StaticResource Primary}" Click="OnSaveNetwork"/></StackPanel>
+                        <TextBlock x:Name="netMsg" Margin="0,8,0,0" Foreground="{StaticResource AmberBrush}" TextWrapping="Wrap"/>
+                    </StackPanel></Border>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12"><StackPanel>
+                        <TextBlock Text="This PC" Style="{StaticResource H2}" Margin="0,0,0,8"/>
+                        <TextBlock Text="{Binding LocalAddresses}" TextWrapping="Wrap"/>
+                        <TextBlock Text="Windows Firewall" Style="{StaticResource H2}" Margin="0,14,0,4"/>
+                        <TextBlock Text="A firewall rule is only created after you approve it (Windows will ask for administrator permission). It allows this program on private networks, from the local subnet only." Style="{StaticResource Muted}" TextWrapping="Wrap"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button Content="Create firewall rule…" Click="OnCreateFirewall"/>
+                            <Button Content="Remove firewall rule…" Margin="8,0,0,0" Click="OnRemoveFirewall"/></StackPanel>
+                    </StackPanel></Border>
+                    <Border Style="{StaticResource Card}"><StackPanel>
+                        <DockPanel><Button DockPanel.Dock="Right" Content="Refresh" Click="OnRefreshWol"/><TextBlock Text="Wake-on-LAN readiness" Style="{StaticResource H2}"/></DockPanel>
+                        <TextBlock Text="The phone sends the magic packet, so it needs the MAC address of the adapter below. Wake-on-LAN must also be enabled in the BIOS/UEFI and in the adapter's driver properties." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,8"/>
+                        <ItemsControl ItemsSource="{Binding WolRows}"><ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="12" Margin="0,2" TextWrapping="Wrap"/></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    </StackPanel></Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================= SECURITY ================= -->
+            <ScrollViewer x:Name="PageSecurity" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <StackPanel MaxWidth="820" HorizontalAlignment="Left">
+                    <TextBlock Text="Security &amp; Settings" Style="{StaticResource H1}"/>
+                    <TextBlock Text="{Binding RunningAs, StringFormat='The server runs as {0}. It never elevates itself.'}" Style="{StaticResource Muted}" Margin="0,2,0,16"/>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12"><StackPanel>
+                        <TextBlock Text="Security" Style="{StaticResource H2}" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="secElevated" Content="Allow shortcuts to run elevated (Windows shows a UAC prompt on this PC each time)"/>
+                        <TextBlock Text="Session lifetime (hours)" Style="{StaticResource Muted}" Margin="0,8,0,0"/><TextBox x:Name="secSession" Width="100" HorizontalAlignment="Left" Margin="0,2,0,8"/>
+                        <TextBlock Text="Authentication timeout (seconds)" Style="{StaticResource Muted}"/><TextBox x:Name="secAuth" Width="100" HorizontalAlignment="Left" Margin="0,2,0,8"/>
+                        <TextBlock Text="Pairing code lifetime (minutes)" Style="{StaticResource Muted}"/><TextBox x:Name="secPair" Width="100" HorizontalAlignment="Left" Margin="0,2,0,8"/>
+                        <TextBlock Text="Keep activity logs for (days)" Style="{StaticResource Muted}"/><TextBox x:Name="secRetention" Width="100" HorizontalAlignment="Left" Margin="0,2,0,8"/>
+                        <Button Content="Save security settings" Style="{StaticResource Primary}" HorizontalAlignment="Left" Click="OnSaveSecurity"/>
+                        <TextBlock Text="Certificate" Style="{StaticResource H2}" Margin="0,16,0,4"/>
+                        <TextBlock Text="Phones pin this certificate. Creating a new one disconnects every phone; they must be paired again." Style="{StaticResource Muted}" TextWrapping="Wrap"/>
+                        <Button Content="Create new certificate…" Style="{StaticResource Danger}" HorizontalAlignment="Left" Margin="0,8,0,0" Click="OnRegenCert"/>
+                    </StackPanel></Border>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12"><StackPanel>
+                        <TextBlock Text="General" Style="{StaticResource H2}" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="genStartup" Content="Start with Windows (minimised to the tray)"/>
+                        <CheckBox x:Name="genTray" Content="Minimise to the system tray (the server keeps running)"/>
+                        <CheckBox x:Name="genAutoStart" Content="Start the server automatically when the app starts"/>
+                        <CheckBox x:Name="genTermWin" Content="Show the terminal windows on this PC when a shell starts"/>
+                        <Button Content="Save general settings" Style="{StaticResource Primary}" HorizontalAlignment="Left" Margin="0,8,0,0" Click="OnSaveGeneral"/>
+                    </StackPanel></Border>
+                    <Border Style="{StaticResource Card}"><StackPanel>
+                        <TextBlock Text="Backup and restore" Style="{StaticResource H2}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Settings and shortcuts are saved as a JSON file. Optionally include paired devices (token hashes only; the phones keep working if the certificate is unchanged). Restoring replaces current settings and shortcuts and asks first." Style="{StaticResource Muted}" TextWrapping="Wrap"/>
+                        <CheckBox x:Name="bkDevices" Content="Include paired devices" Margin="0,8,0,0"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button Content="Back up…" Click="OnBackup"/><Button Content="Restore…" Margin="8,0,0,0" Click="OnRestore"/></StackPanel>
+                    </StackPanel></Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>
