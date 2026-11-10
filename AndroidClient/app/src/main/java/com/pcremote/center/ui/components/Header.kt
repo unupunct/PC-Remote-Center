@@ -111,6 +111,13 @@ fun ConnectionHeader(
                 }
                 Pill(txt, col)
                 if (status.state == LinkState.Connected) Pill(qualityLabel(quality, rttMs), qualityColor(quality))
+                // which path the link uses: home LAN, Tailscale, WireGuard ...
+                if (status.state == LinkState.Connected && status.path != null) {
+                    Pill(
+                        com.pcremote.center.networking.NetworkPaths.label(status.path),
+                        if (status.path == com.pcremote.center.networking.NetworkPaths.LAN) Pc.TextSecondary else Pc.Purple,
+                    )
+                }
             }
             Text(
                 "Last sync: ${agoText(lastSyncMs, now)}",

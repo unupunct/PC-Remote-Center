@@ -334,6 +334,16 @@
                         <TextBlock x:Name="netMsg" Margin="0,8,0,0" Foreground="{StaticResource AmberBrush}" TextWrapping="Wrap"/>
                     </StackPanel></Border>
                     <Border Style="{StaticResource Card}" Margin="0,0,0,12"><StackPanel>
+                        <DockPanel><Button DockPanel.Dock="Right" Content="Refresh" Click="OnRefreshVpn"/><TextBlock Text="Remote access: Tailscale &amp; WireGuard" Style="{StaticResource H2}"/></DockPanel>
+                        <TextBlock Text="Use your own VPN instead of opening a port to the internet. Install and sign in to Tailscale (or run a WireGuard tunnel) on this PC and on the phone, then allow the VPN here. Connections are accepted only when they arrive through that VPN adapter." Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,8"/>
+                        <ItemsControl ItemsSource="{Binding VpnRows}"><ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="12" Margin="0,2" TextWrapping="Wrap"/></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                        <CheckBox x:Name="vpnTailscale" Content="Allow connections through Tailscale (tailnet addresses 100.64.0.0/10; use Tailscale ACLs to limit which of your devices may reach this PC)" Margin="0,10,0,0"/>
+                        <CheckBox x:Name="vpnWireGuard" Content="Allow connections through WireGuard (the tunnel's subnet)"/>
+                        <Button Content="Apply" Style="{StaticResource Primary}" HorizontalAlignment="Left" Margin="0,8,0,0" Click="OnApplyVpn"/>
+                        <TextBlock Text="{Binding VpnHint}" Style="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                        <TextBlock x:Name="vpnMsg" Margin="0,6,0,0" Foreground="{StaticResource AmberBrush}" TextWrapping="Wrap"/>
+                    </StackPanel></Border>
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12"><StackPanel>
                         <TextBlock Text="This PC" Style="{StaticResource H2}" Margin="0,0,0,8"/>
                         <TextBlock Text="{Binding LocalAddresses}" TextWrapping="Wrap"/>
                         <TextBlock Text="Windows Firewall" Style="{StaticResource H2}" Margin="0,14,0,4"/>

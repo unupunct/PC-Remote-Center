@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>RemoteControlServer</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <!-- NU1903: advisory on the bundled native SQLite build; the database only ever opens our own local file, never untrusted input. -->
     <NoWarn>$(NoWarn);NU1903</NoWarn>
   </PropertyGroup>

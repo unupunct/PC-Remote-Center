@@ -4,7 +4,7 @@
 .EXAMPLE   pwsh -File Scripts\package-release.ps1 -SkipTests -SkipAndroid
 APK signing: build-android.ps1 -Release signs with the user's own keystore (AndroidClient\keystore.properties); no key is bundled.
 #>
-param([string]$Version = '1.0.0', [switch]$SkipTests, [switch]$SkipAndroid, [switch]$SkipWindowsBuild)
+param([string]$Version = '1.1.0', [switch]$SkipTests, [switch]$SkipAndroid, [switch]$SkipWindowsBuild)
 $ErrorActionPreference = 'Stop'
 $root = Resolve-Path (Join-Path $PSScriptRoot '..')
 $dist = Join-Path $root 'dist'

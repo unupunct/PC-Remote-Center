@@ -78,13 +78,13 @@ public sealed class TestClient : IAsyncDisposable
     public Task Receiver { get; private set; } = Task.CompletedTask;
     public bool Closed { get; private set; }
 
-    public static async Task<TestClient> ConnectAsync(int port, string? pinFingerprint)
+    public static async Task<TestClient> ConnectAsync(int port, string? pinFingerprint, string host = "127.0.0.1")
     {
         var c = new TestClient();
         c._ws.Options.RemoteCertificateValidationCallback = (_, cert, _, _) =>
             cert != null && (pinFingerprint == null || Convert.ToHexString(SHA256.HashData(cert.GetRawCertData())) == pinFingerprint);
         using var to = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-        await c._ws.ConnectAsync(new Uri($"wss://127.0.0.1:{port}/ws"), to.Token);
+        await c._ws.ConnectAsync(new Uri($"wss://{host}:{port}/ws"), to.Token);
         c.Receiver = Task.Run(c.ReceiveLoop);
         return c;
     }

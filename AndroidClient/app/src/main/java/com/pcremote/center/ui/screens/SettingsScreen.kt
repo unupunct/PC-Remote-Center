@@ -40,6 +40,7 @@ import com.pcremote.center.core.Permissions
 import com.pcremote.center.core.Protocol
 import com.pcremote.center.core.SavedPc
 import com.pcremote.center.networking.LinkState
+import com.pcremote.center.networking.NetworkPaths
 import com.pcremote.center.security.Fingerprint
 import com.pcremote.center.ui.components.Panel
 import com.pcremote.center.ui.components.Pill
@@ -60,6 +61,20 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
         container.store.remove(pc.id)
         container.connection.reconnectNow()
     }
+    /** Adds an address (IP or host name such as a Tailscale MagicDNS name). Returns an error text, or null on success. */
+    fun addHost(pc: SavedPc, input: String): String? {
+        val host = com.pcremote.center.networking.NetworkPaths.normalizeHostInput(input)
+            ?: return "Enter an IP address or a host name (letters, digits, '-' and '.')."
+        if (host in pc.hosts) return "This address is already saved."
+        container.store.update(pc.id) { it.copy(hosts = it.hosts + host) }
+        return null
+    }
+
+    fun removeHost(pc: SavedPc, host: String) {
+        if (pc.hosts.size <= 1) return
+        container.store.update(pc.id) { it.copy(hosts = it.hosts - host, hostKinds = it.hostKinds - host, lastHost = it.lastHost?.takeIf { l -> l != host }) }
+    }
+
     fun setThresholds(amber: Int, red: Int) = container.settings.setThresholds(amber, red)
     fun setHistory(seconds: Int) = container.settings.setHistorySeconds(seconds)
 }
@@ -73,6 +88,9 @@ fun SettingsScreen(onAddPc: () -> Unit, vm: SettingsViewModel = viewModel()) {
     val perms by vm.permissions.collectAsState()
     val name by vm.computerName.collectAsState()
     var forget by remember { mutableStateOf<SavedPc?>(null) }
+    var addHostFor by remember { mutableStateOf<SavedPc?>(null) }
+    var hostText by remember { mutableStateOf("") }
+    var hostError by remember { mutableStateOf<String?>(null) }
 
     LazyColumn(
         Modifier.fillMaxSize().statusBarsPadding(),
@@ -90,7 +108,7 @@ fun SettingsScreen(onAddPc: () -> Unit, vm: SettingsViewModel = viewModel()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(pc.name, style = MaterialTheme.typography.titleMedium)
-                            Text("${pc.orderedHosts().joinToString(", ")}:${pc.port}", style = MaterialTheme.typography.bodySmall, color = Pc.TextSecondary)
+                            Text("Port ${pc.port}", style = MaterialTheme.typography.bodySmall, color = Pc.TextSecondary)
                         }
                         if (isActive) Pill(
                             when (status.state) {
@@ -102,12 +120,24 @@ fun SettingsScreen(onAddPc: () -> Unit, vm: SettingsViewModel = viewModel()) {
                             when (status.state) { LinkState.Connected -> Pc.Green; LinkState.Connecting -> Pc.Amber; else -> Pc.Red },
                         )
                     }
+                    // every saved address with its network path; the app tries them in this order
+                    pc.orderedHosts().forEach { h ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(h, style = MaterialTheme.typography.bodySmall, color = Pc.TextSecondary, modifier = Modifier.weight(1f))
+                            Pill(
+                                NetworkPaths.label(NetworkPaths.classify(h, pc.hostKinds)),
+                                if (NetworkPaths.classify(h, pc.hostKinds) == NetworkPaths.LAN) Pc.TextSecondary else Pc.Purple,
+                            )
+                            if (pc.hosts.size > 1) TextButton(onClick = { vm.removeHost(pc, h) }) { Text("Remove", color = Pc.Red, style = MaterialTheme.typography.labelSmall) }
+                        }
+                    }
                     Text(
                         "Pinned certificate: " + Fingerprint.pretty(pc.fingerprint).take(23) + "...",
                         style = MaterialTheme.typography.labelSmall, color = Pc.TextDim,
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (!isActive || status.state != LinkState.Connected) Button(onClick = { vm.connect(pc) }) { Text(if (isActive) "Reconnect" else "Connect") }
+                        OutlinedButton(onClick = { addHostFor = pc; hostText = ""; hostError = null }) { Text("Add address") }
                         OutlinedButton(onClick = onAddPc) { Text("Re-pair") }
                         TextButton(onClick = { forget = pc }) { Text("Forget", color = Pc.Red) }
                     }
@@ -191,6 +221,34 @@ fun SettingsScreen(onAddPc: () -> Unit, vm: SettingsViewModel = viewModel()) {
                 }
             }
         }
+    }
+
+    addHostFor?.let { pc ->
+        AlertDialog(
+            onDismissRequest = { addHostFor = null },
+            title = { Text("Add address for ${pc.name}") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "An extra way to reach this PC, for example its Tailscale name (my-pc.your-tailnet.ts.net) or a WireGuard address. " +
+                            "The pinned certificate is still checked, so a wrong address can never be trusted by accident.",
+                        style = MaterialTheme.typography.bodySmall, color = Pc.TextSecondary,
+                    )
+                    androidx.compose.material3.OutlinedTextField(
+                        value = hostText, onValueChange = { hostText = it; hostError = null },
+                        label = { Text("IP address or host name") }, singleLine = true, isError = hostError != null,
+                        supportingText = hostError?.let { e -> { Text(e) } },
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val err = vm.addHost(pc, hostText)
+                    if (err == null) addHostFor = null else hostError = err
+                }) { Text("Add") }
+            },
+            dismissButton = { TextButton(onClick = { addHostFor = null }) { Text("Cancel") } },
+        )
     }
 
     forget?.let { pc ->

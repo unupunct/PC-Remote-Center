@@ -56,6 +56,8 @@ data class LinkStatus(
     /** Wall clock time of the next automatic retry while Disconnected. */
     val retryAtMs: Long? = null,
     val host: String? = null,
+    /** Network path of [host]: lan, tailscale, wireguard, vpn or other (see [NetworkPaths]). */
+    val path: String? = null,
 )
 
 /**
@@ -280,7 +282,7 @@ class ConnectionManager(
             _computerName.value = name ?: pc.name
             store.update(pc.id) { it.copy(lastHost = host, name = name?.takeIf { n -> n.isNotBlank() } ?: it.name) }
             _sessionId.value = _sessionId.value + 1
-            _status.value = LinkStatus(LinkState.Connected, host = host)
+            _status.value = LinkStatus(LinkState.Connected, host = host, path = NetworkPaths.classify(host, pc.hostKinds))
             pingJob = scope.launch { pingLoop(me) }
             scope.launch { refreshServerInfo(pc.id, me) }
 
@@ -403,6 +405,12 @@ class ConnectionManager(
     private suspend fun refreshServerInfo(pcId: String, l: Live) {
         try {
             val info = rawRequest(l, "server.info", JsonObject(emptyMap()), 10_000)
+            // remember the PC's other addresses (LAN + Tailscale/WireGuard if allowed on the PC) for use away from home
+            val reported = NetworkPaths.parseNetworks(info)
+            if (reported.isNotEmpty()) {
+                store.update(pcId) { NetworkPaths.merge(it, reported) }
+                _status.value = _status.value.let { s -> if (s.state == LinkState.Connected && s.host != null) s.copy(path = NetworkPaths.classify(s.host, reported)) else s }
+            }
             var adapter = WolAdapter.pick(WolAdapter.parseList(info, "macAddresses"))
             var hint: String? = null
             if (Permissions.MONITORING in _permissions.value) {

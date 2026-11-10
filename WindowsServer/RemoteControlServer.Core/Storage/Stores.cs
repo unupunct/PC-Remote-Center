@@ -18,6 +18,10 @@ public sealed class ServerSettings
     public string ExtraAllowedNetworks { get; set; } = "";
     /// <summary>When false (default) only loopback, private LAN, link-local and CGNAT-less ranges are accepted.</summary>
     public bool LanOnly { get; set; } = true;
+    /// <summary>Also accept connections that arrive through the Tailscale adapter (tailnet range, bound to that adapter's address). Off by default.</summary>
+    public bool AllowTailscale { get; set; }
+    /// <summary>Also accept connections that arrive through a WireGuard tunnel (the tunnel's subnet, bound to its address). Off by default.</summary>
+    public bool AllowWireGuard { get; set; }
     public int SessionMaxHours { get; set; } = 12;
     public int AuthTimeoutSeconds { get; set; } = 10;
     public int MonitorIntervalMs { get; set; } = 1500;

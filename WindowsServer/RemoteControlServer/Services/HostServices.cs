@@ -33,17 +33,26 @@ public static class FirewallService
     public const string RuleName = "PC Remote Center";
 
     /// <summary>Creates inbound allow rules (private profile, local subnet only). Windows shows its UAC prompt - nothing happens silently.</summary>
-    public static void CreateRules(int port, int discoveryPort)
+    /// <param name="vpnRanges">Source ranges (CIDR) of the VPNs the owner allowed, e.g. 100.64.0.0/10. They get their own TCP rule
+    /// on every network profile (VPN adapters are often classified "Public"), limited to exactly those source ranges.</param>
+    public static void CreateRules(int port, int discoveryPort, IEnumerable<string>? vpnRanges = null)
     {
         var exe = Environment.ProcessPath ?? throw new InvalidOperationException("Cannot determine the program path.");
         if (exe.Contains('"')) throw new InvalidOperationException("Unsupported program path.");
         if (port is < 1 or > 65535 || discoveryPort is < 1 or > 65535) throw new ArgumentException("Invalid port.");
-        RunNetshScript(
-        [
+        var ranges = (vpnRanges ?? []).Distinct().ToList();
+        foreach (var r in ranges)
+            if (!Security.NetworkFilter.TryCidr(r, out _, out _) || r.Any(ch => !(char.IsDigit(ch) || ch is '.' or '/' or ':' or 'a' or 'b' or 'c' or 'd' or 'e' or 'f')))
+                throw new ArgumentException("Invalid VPN range: " + r);
+        var lines = new List<string>
+        {
             $"advfirewall firewall delete rule name=\"{RuleName}\"",
             $"advfirewall firewall add rule name=\"{RuleName}\" dir=in action=allow protocol=TCP localport={port} profile=private remoteip=LocalSubnet program=\"{exe}\" description=\"Remote control server (TLS)\"",
             $"advfirewall firewall add rule name=\"{RuleName}\" dir=in action=allow protocol=UDP localport={discoveryPort} profile=private remoteip=LocalSubnet program=\"{exe}\" description=\"Phone discovery\"",
-        ]);
+        };
+        if (ranges.Count > 0)
+            lines.Add($"advfirewall firewall add rule name=\"{RuleName}\" dir=in action=allow protocol=TCP localport={port} profile=any remoteip={string.Join(',', ranges)} program=\"{exe}\" description=\"Remote control server via VPN\"");
+        RunNetshScript([.. lines]);
     }
 
     public static void RemoveRules() => RunNetshScript([$"advfirewall firewall delete rule name=\"{RuleName}\""]);

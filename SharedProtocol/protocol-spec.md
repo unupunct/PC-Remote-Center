@@ -52,7 +52,10 @@ Heartbeat: send `ping` every ~10 s; the server closes connections idle for 60 s.
 
 ### General (any authenticated device)
 * `ping` → `{serverTimeUtc}`
-* `server.info` → `{computerName, permissions[], protocol, uptimeSeconds, macAddresses:[{name, mac, ipv4, broadcast, wireless}]}`
+* `server.info` → `{computerName, permissions[], protocol, uptimeSeconds, macAddresses:[{name, mac, ipv4, broadcast, wireless}], networks:[{address, kind}]}`
+  `networks` lists the addresses the PC can be reached at: `kind` is `lan`, or `tailscale` / `wireguard` when the owner has allowed
+  that VPN (only usable addresses are listed). Clients should add unseen addresses to the saved PC (never remove any) so they keep
+  working away from home, and may show `kind` as the connection path.
 
 ### Monitoring (`monitoring`)
 * `monitor.subscribe` → `{intervalMs, snapshot?}`; afterwards the server pushes `monitor.snapshot {snapshot}` every 0.5–10 s (default 1.5 s)

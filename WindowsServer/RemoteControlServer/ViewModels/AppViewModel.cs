@@ -233,7 +233,9 @@ public sealed class AppViewModel : Bindable, IDisposable
         var offer = Core.Pairing.Active;
         if (offer == null) { PairCode = ""; PairQr = null; PairUri = ""; PairInfo = "No active pairing code"; return; }
         PairCode = offer.Code.Insert(4, " ");
-        var hosts = string.Join(',', NetworkInfo.LocalAddresses().Select(a => a.ToString()));
+        VpnDetector.InvalidateCache();
+        var hosts = string.Join(',', VpnDetector.PairingHosts(VpnDetector.CachedDetect(), Core.Settings.AllowTailscale, Core.Settings.AllowWireGuard).Select(a => a.ToString()));
+        if (hosts.Length == 0) hosts = string.Join(',', NetworkInfo.LocalAddresses().Select(a => a.ToString()));
         PairUri = $"pcrc://pair?v=1&h={Uri.EscapeDataString(hosts)}&p={Core.ListeningPort}&c={offer.Code}&f={Core.Certs.Fingerprint}&n={Uri.EscapeDataString(Core.Settings.ComputerName)}";
         using var gen = new QRCodeGenerator();
         var data = gen.CreateQrCode(PairUri, QRCodeGenerator.ECCLevel.M);
@@ -285,6 +287,28 @@ public sealed class AppViewModel : Bindable, IDisposable
     }
 
     private static void Push(List<double> l, double v) { l.Add(v); if (l.Count > 120) l.RemoveAt(0); }
+
+    public ObservableCollection<string> VpnRows { get; } = [];
+    private string _vpnHint = ""; public string VpnHint { get => _vpnHint; private set => Set(ref _vpnHint, value); }
+
+    /// <summary>Lists detected Tailscale / WireGuard / other VPN adapters and the address a phone would use.</summary>
+    public void LoadVpn()
+    {
+        VpnDetector.InvalidateCache();
+        var all = VpnDetector.CachedDetect().Where(i => i.Kind != NetworkKind.Lan && i.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToList();
+        VpnRows.Clear();
+        foreach (var i in all)
+        {
+            var kind = i.Kind switch { NetworkKind.Tailscale => "Tailscale", NetworkKind.WireGuard => "WireGuard", _ => "Other VPN" };
+            var allowed = i.Kind == NetworkKind.Tailscale ? Core.Settings.AllowTailscale : i.Kind == NetworkKind.WireGuard ? Core.Settings.AllowWireGuard : false;
+            var note = i.Kind == NetworkKind.OtherVpn ? "detected (not managed here)" : allowed ? "connections allowed" : "connections NOT allowed yet";
+            if (i.Kind == NetworkKind.WireGuard && i.PrefixLength >= 32) note = "tunnel address is a /32: add your peer subnet under 'Extra allowed networks'";
+            VpnRows.Add($"{kind}: {i.Address}  (adapter \"{i.Name}\") – {note}");
+        }
+        if (VpnRows.Count == 0) VpnRows.Add("No Tailscale or WireGuard adapter found. Install and sign in to Tailscale (tailscale.com) or bring up a WireGuard tunnel, then press Refresh.");
+        var hosts = VpnDetector.PairingHosts(VpnDetector.CachedDetect(), Core.Settings.AllowTailscale, Core.Settings.AllowWireGuard);
+        VpnHint = hosts.Count == 0 ? "" : $"Phone addresses (pairing QR uses these, LAN first): {string.Join(", ", hosts)}   port {Core.Settings.Port}";
+    }
 
     public void LoadWol()
     {

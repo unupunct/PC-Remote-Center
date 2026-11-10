@@ -74,7 +74,8 @@ public sealed class ServerCore : IDisposable
         History = new ConnectionHistory(Db);
         Certs = new CertificateManager(DataDir);
         Settings = SettingsStore.Load();
-        Filter = new NetworkFilter(() => (Settings.LanOnly, Settings.ExtraAllowedNetworks));
+        Filter = new NetworkFilter(() => (Settings.LanOnly, Settings.ExtraAllowedNetworks),
+            () => VpnDetector.BuildRules(VpnDetector.CachedDetect(), Settings.AllowTailscale, Settings.AllowWireGuard));
         SettingsStore.Changed += () => Settings = SettingsStore.Load();
         Devices.Changed += OnDevicesChanged;
         RegisterCoreHandlers();
@@ -114,9 +115,9 @@ public sealed class ServerCore : IDisposable
             var app = builder.Build();
             app.Use(async (ctx, next) =>
             {
-                if (!Filter.IsAllowed(ctx.Connection.RemoteIpAddress))
+                if (!Filter.IsAllowed(ctx.Connection.RemoteIpAddress, ctx.Connection.LocalIpAddress))
                 {
-                    AppLog.Warn("Rejected connection from disallowed network", new { ip = ctx.Connection.RemoteIpAddress?.ToString() });
+                    AppLog.Warn("Rejected connection from disallowed network", new { ip = ctx.Connection.RemoteIpAddress?.ToString(), via = ctx.Connection.LocalIpAddress?.ToString() });
                     ctx.Response.StatusCode = 403;
                     return;
                 }
@@ -496,6 +497,10 @@ public sealed class ServerCore : IDisposable
             computerName = Settings.ComputerName, permissions = c.Permissions.ToNames(), protocol = Protocol.Version,
             uptimeSeconds = StartedUtc == null ? 0 : (int)(DateTime.UtcNow - StartedUtc.Value).TotalSeconds,
             macAddresses = Services.NetworkAdapters.MacAddresses(),
+            // addresses a phone can use to reach this PC, so it can keep a Tailscale/WireGuard address for use away from home
+            networks = VpnDetector.PairingHosts(VpnDetector.CachedDetect(), Settings.AllowTailscale, Settings.AllowWireGuard)
+                .Select(a => new { address = a.ToString(), kind = VpnDetector.CachedDetect().First(i => i.Address.Equals(a)).KindText })
+                .ToArray(),
         }));
     }
 }

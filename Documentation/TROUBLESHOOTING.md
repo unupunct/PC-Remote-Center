@@ -11,7 +11,10 @@ the app under *Activity Logs*.
 | "Certificate does not match" | The PC created a new certificate (reinstall, *Create new certificate*, deleted data folder). Pair the phone again. |
 | "Authentication failed" | The device was revoked or removed on the PC, or the data folder was reset. Remove the PC on the phone and pair again. |
 | "Too many failed attempts" | 5 wrong codes/tokens from your IP in 5 minutes. Wait, then try again. |
-| 403 / refused from a VPN | Add the VPN subnet to *Network Settings → Extra allowed networks*. |
+| Refused / timeout through Tailscale | On the PC tick *Network Settings → Allow connections through Tailscale* → Apply; make sure Tailscale is connected on both devices, and that a Tailscale ACL or Windows Firewall does not block TCP 47821. The PC page must list the adapter ("Tailscale: 100.x.y.z"). |
+| Refused / timeout through WireGuard | Tick *Allow connections through WireGuard*; if the tunnel address is a /32 add the peer subnet to *Extra allowed networks*; allow TCP 47821 in Windows Firewall for the tunnel's network profile. |
+| Phone paired at home does not know the VPN address | Connect once on the LAN after enabling the VPN option (the app learns the address), or add the address under *Settings → Add address*. |
+| 403 / refused from another VPN (OpenVPN, ZeroTier …) | Add that VPN's subnet to *Network Settings → Extra allowed networks*. |
 
 ## Server
 | Symptom | Fix |

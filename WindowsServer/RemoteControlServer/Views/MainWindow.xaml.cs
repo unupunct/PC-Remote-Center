@@ -33,7 +33,7 @@ public partial class MainWindow : Window
         _termTimer.Start();
         LoadSettingsIntoForms();
         RefreshTerminals();
-        _vm.LoadWol();
+        _vm.LoadWol(); _vm.LoadVpn();
     }
 
     private IEnumerable<RadioButton> FindRadios(DependencyObject root)
@@ -53,7 +53,7 @@ public partial class MainWindow : Window
         foreach (var name in new[] { "PageOverview", "PageHardware", "PageTerminals", "PageDevices", "PageShortcuts", "PageLogs", "PageNetwork", "PageSecurity" })
             if (FindName(name) is UIElement page) page.Visibility = name == tag ? Visibility.Visible : Visibility.Collapsed;
         if (tag == "PageLogs") { _vm.RefreshAudit(); _vm.RefreshHistory(); }
-        if (tag == "PageNetwork") _vm.LoadWol();
+        if (tag == "PageNetwork") { _vm.LoadWol(); _vm.LoadVpn(); }
     }
 
     // ---- window behaviour: minimising / closing hides to the tray, the server keeps running
@@ -286,7 +286,7 @@ public partial class MainWindow : Window
         var st = _vm.Core.SettingsStore.Load();
         netPort.Text = st.Port.ToString(); netDiscovery.IsChecked = st.DiscoveryEnabled; netLanOnly.IsChecked = st.LanOnly; netExtra.Text = st.ExtraAllowedNetworks; netName.Text = st.ComputerName;
         secElevated.IsChecked = st.AllowElevatedLaunch; secSession.Text = st.SessionMaxHours.ToString(); secAuth.Text = st.AuthTimeoutSeconds.ToString(); secPair.Text = st.PairingCodeMinutes.ToString(); secRetention.Text = st.LogRetentionDays.ToString();
-        genStartup.IsChecked = StartupRegistration.IsEnabled(); genTray.IsChecked = st.MinimizeToTray; genAutoStart.IsChecked = st.AutoStartServer; genTermWin.IsChecked = st.ShowTerminalWindows;
+        vpnTailscale.IsChecked = st.AllowTailscale; vpnWireGuard.IsChecked = st.AllowWireGuard; genStartup.IsChecked = StartupRegistration.IsEnabled(); genTray.IsChecked = st.MinimizeToTray; genAutoStart.IsChecked = st.AutoStartServer; genTermWin.IsChecked = st.ShowTerminalWindows;
     }
 
     private async void OnSaveNetwork(object s, RoutedEventArgs e)
@@ -346,8 +346,11 @@ public partial class MainWindow : Window
     private void OnCreateFirewall(object s, RoutedEventArgs e)
     {
         var st = _vm.Core.Settings;
-        if (MessageBox.Show(this, $"Allow PC Remote Center through Windows Firewall?\n\n• TCP {st.Port} (phone connections) and UDP {st.DiscoveryPort} (discovery)\n• Private networks only, from the local subnet only\n\nWindows will ask for administrator permission.", "Firewall rule", MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK) return;
-        try { FirewallService.CreateRules(st.Port, st.DiscoveryPort); _vm.Core.Audit.Write("owner", "firewall.rule.created"); MessageBox.Show(this, "Firewall rule created.", "Firewall"); }
+        var vpnRanges = Networking.VpnDetector.BuildRules(Networking.VpnDetector.Detect(), st.AllowTailscale, st.AllowWireGuard)
+            .Select(r => $"{r.Network}/{r.Bits}").Distinct().ToList();
+        var vpnLine = vpnRanges.Count == 0 ? "" : $"\n• TCP {st.Port} from the VPN range(s) you allowed: {string.Join(", ", vpnRanges)} (any network profile)";
+        if (MessageBox.Show(this, $"Allow PC Remote Center through Windows Firewall?\n\n• TCP {st.Port} (phone connections) and UDP {st.DiscoveryPort} (discovery)\n• Private networks only, from the local subnet only{vpnLine}\n\nWindows will ask for administrator permission.", "Firewall rule", MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK) return;
+        try { FirewallService.CreateRules(st.Port, st.DiscoveryPort, vpnRanges); _vm.Core.Audit.Write("owner", "firewall.rule.created", vpnRanges.Count == 0 ? "" : "vpn: " + string.Join(',', vpnRanges)); MessageBox.Show(this, "Firewall rule created.", "Firewall"); }
         catch (OperationCanceledException ex) { MessageBox.Show(this, ex.Message, "Firewall"); }
         catch (Exception ex) { MessageBox.Show(this, "Could not create the rule: " + ex.Message, "Firewall", MessageBoxButton.OK, MessageBoxImage.Warning); }
     }
@@ -360,6 +363,27 @@ public partial class MainWindow : Window
     }
 
     private void OnRefreshWol(object s, RoutedEventArgs e) => _vm.LoadWol();
+
+    private void OnRefreshVpn(object s, RoutedEventArgs e) { _vm.LoadVpn(); vpnMsg.Text = ""; }
+
+    private void OnApplyVpn(object s, RoutedEventArgs e)
+    {
+        var st = _vm.Core.SettingsStore.Load();
+        bool ts = vpnTailscale.IsChecked == true, wg = vpnWireGuard.IsChecked == true;
+        if (!st.LanOnly) { vpnMsg.Text = "'LAN only' is switched off, so every network is already accepted. Turn it back on first (Network settings above)."; return; }
+        if ((ts && !st.AllowTailscale) || (wg && !st.AllowWireGuard))
+        {
+            var what = string.Join(" and ", new[] { ts && !st.AllowTailscale ? "Tailscale" : null, wg && !st.AllowWireGuard ? "WireGuard" : null }.Where(x => x != null));
+            if (MessageBox.Show(this, $"Accept connections that arrive through {what}?\n\nEvery device that can reach this PC through that VPN may then try to pair or log in (they still need a pairing code or a valid token).", "Allow VPN access", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            { vpnTailscale.IsChecked = st.AllowTailscale; vpnWireGuard.IsChecked = st.AllowWireGuard; return; }
+        }
+        st.AllowTailscale = ts; st.AllowWireGuard = wg;
+        _vm.Core.SettingsStore.Save(st);
+        Networking.VpnDetector.InvalidateCache();
+        _vm.Core.Audit.Write("owner", "settings.vpn", $"tailscale {ts}, wireguard {wg}");
+        _vm.LoadVpn(); _vm.RefreshAll();
+        vpnMsg.Text = "Saved. Active immediately; no restart needed. Generate a new pairing code to get a QR that includes the VPN address.";
+    }
 
     private void OnBackup(object s, RoutedEventArgs e)
     {

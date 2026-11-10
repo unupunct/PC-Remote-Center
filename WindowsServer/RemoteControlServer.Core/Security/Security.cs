@@ -82,17 +82,33 @@ public static class NetworkInfo
 public sealed class NetworkFilter
 {
     private readonly Func<(bool lanOnly, string extra)> _cfg;
-    public NetworkFilter(Func<(bool lanOnly, string extra)> cfg) => _cfg = cfg;
+    private readonly Func<IReadOnlyList<RemoteControlServer.Networking.VpnRule>>? _vpn;
 
-    public bool IsAllowed(IPAddress? addr)
+    public NetworkFilter(Func<(bool lanOnly, string extra)> cfg, Func<IReadOnlyList<RemoteControlServer.Networking.VpnRule>>? vpnRules = null)
+    { _cfg = cfg; _vpn = vpnRules; }
+
+    /// <param name="local">Local address the connection arrived on. VPN rules (Tailscale/WireGuard) only match when it
+    /// equals the VPN adapter's own address, so a spoofed 100.x source on the LAN adapter is still refused.</param>
+    public bool IsAllowed(IPAddress? addr, IPAddress? local = null)
     {
         if (addr == null) return false;
         if (addr.IsIPv4MappedToIPv6) addr = addr.MapToIPv4();
+        if (local is { IsIPv4MappedToIPv6: true }) local = local.MapToIPv4();
         if (IPAddress.IsLoopback(addr)) return true;
         var (lanOnly, extra) = _cfg();
         if (!lanOnly) return true;
         foreach (var part in extra.Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries))
             if (TryCidr(part, out var net, out var bits) && InCidr(addr, net!, bits)) return true;
+        if (local != null && _vpn != null)
+            foreach (var r in _vpn())
+                if (r.LocalAddress.Equals(local) && InCidr(addr, r.Network, r.Bits)) return true;
+        return IsPrivate(addr);
+    }
+
+    /// <summary>RFC 1918, link-local and IPv6 link-local/unique-local addresses.</summary>
+    public static bool IsPrivate(IPAddress addr)
+    {
+        if (addr.IsIPv4MappedToIPv6) addr = addr.MapToIPv4();
         if (addr.AddressFamily == AddressFamily.InterNetworkV6)
             return addr.IsIPv6LinkLocal || addr.IsIPv6UniqueLocal || addr.IsIPv6SiteLocal;
         var b = addr.GetAddressBytes();

@@ -9,7 +9,7 @@
     <AssemblyName>RemoteControlServer</AssemblyName>
     <RootNamespace>RemoteControlServer.App</RootNamespace>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <AssemblyTitle>PC Remote Center Server</AssemblyTitle>
     <Product>PC Remote Center</Product>
     <NoWarn>$(NoWarn);NU1903</NoWarn>

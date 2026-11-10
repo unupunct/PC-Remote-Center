@@ -14,6 +14,8 @@ data class SavedPc(
     val deviceId: String,
     val token: String,
     val lastHost: String? = null,
+    /** Network path of known addresses (address -> lan|tailscale|wireguard|vpn), reported by the PC in server.info. */
+    val hostKinds: Map<String, String> = emptyMap(),
     /** Wake-on-LAN data, stored per PC. [wolUserEdited] stops server data from overwriting manual edits. */
     val wolMac: String = "",
     val wolBroadcast: String = "",

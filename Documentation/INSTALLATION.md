@@ -12,7 +12,7 @@ Download from the GitHub *Releases* page and pick one:
 
 Check the download against `SHA256SUMS.txt`:
 ```powershell
-Get-FileHash .\PCRemoteCenter-Server-Setup-1.0.0.exe -Algorithm SHA256
+Get-FileHash .\PCRemoteCenter-Server-Setup-1.1.0.exe -Algorithm SHA256
 ```
 Windows SmartScreen may warn about an unrecognised publisher (the binaries are not code-signed): *More info → Run anyway*.
 
