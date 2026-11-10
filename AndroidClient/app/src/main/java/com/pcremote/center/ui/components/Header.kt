@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -74,6 +75,7 @@ fun agoText(thenMs: Long?, nowMs: Long): String {
 }
 
 /** Dashboard header: logo, computer name, connection state, quality, last sync, settings button. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun ConnectionHeader(
     title: String,
@@ -98,10 +100,11 @@ fun ConnectionHeader(
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Row(
+            // FlowRow: the three badges wrap to a second line on narrow phones instead of being squeezed
+            FlowRow(
                 Modifier.padding(top = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 val (txt, col) = when (status.state) {
                     LinkState.Connected -> "Connected" to Pc.Green

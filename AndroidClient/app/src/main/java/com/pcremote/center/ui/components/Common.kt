@@ -69,7 +69,7 @@ fun Pill(text: String, color: Color, modifier: Modifier = Modifier, dot: Boolean
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         if (dot) StatusDot(color, 7.dp)
-        Text(text, style = MaterialTheme.typography.labelMedium, color = color)
+        Text(text, style = MaterialTheme.typography.labelMedium, color = color, maxLines = 1, softWrap = false)
     }
 }
 
