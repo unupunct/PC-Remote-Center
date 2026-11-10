@@ -144,6 +144,13 @@ public partial class MainWindow : Window
 
     private void OnCancelPairing(object s, RoutedEventArgs e) => _vm.CancelPairing();
 
+    private void OnCopyPairLink(object s, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_vm.PairUri)) { MessageBox.Show(this, "Generate a pairing code first.", "Pairing"); return; }
+        try { Clipboard.SetText(_vm.PairUri); _vm.Core.Audit.Write("owner", "pairing.link.copied"); }
+        catch (Exception ex) { MessageBox.Show(this, "Could not copy: " + ex.Message, "Pairing"); }
+    }
+
     private DeviceVm? SelDevice() => gridDevices.SelectedItem as DeviceVm;
 
     private void OnRevokeDevice(object s, RoutedEventArgs e)

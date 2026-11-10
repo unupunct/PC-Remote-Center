@@ -48,6 +48,7 @@ import com.pcremote.center.PcRemoteApp
 import com.pcremote.center.ui.screens.ConnectScreen
 import com.pcremote.center.ui.screens.DashboardScreen
 import com.pcremote.center.ui.screens.DetailScreen
+import com.pcremote.center.ui.screens.ProcessesScreen
 import com.pcremote.center.ui.screens.SettingsScreen
 import com.pcremote.center.ui.screens.ShortcutsScreen
 import com.pcremote.center.ui.screens.TerminalScreen
@@ -79,6 +80,12 @@ fun AppRoot() {
             lastIsError = m.isError
             snackbar.showSnackbar(m.text, duration = if (m.text.length > 70 || m.isError) SnackbarDuration.Long else SnackbarDuration.Short)
         }
+    }
+
+    // a pairing link opened from outside the app jumps straight to the pairing screen
+    val pending by container.pendingPairLink.collectAsState()
+    LaunchedEffect(pending) {
+        if (pending != null && nav.currentDestination?.route != "connect") nav.navigate("connect") { launchSingleTop = true }
     }
 
     Box(Modifier.fillMaxSize().background(Pc.Charcoal).imePadding()) {
@@ -140,12 +147,14 @@ fun AppRoot() {
                     DashboardScreen(
                         onOpenDetail = { nav.navigate("detail/$it") },
                         onOpenSettings = { nav.navigate("settings") { launchSingleTop = true } },
+                        onOpenProcesses = { nav.navigate("processes") { launchSingleTop = true } },
                         onAddPc = { nav.navigate("connect") },
                     )
                 }
                 composable("detail/{kind}") { e ->
                     DetailScreen(e.arguments?.getString("kind") ?: "cpu", onBack = { nav.popBackStack() })
                 }
+                composable("processes") { ProcessesScreen(onBack = { nav.popBackStack() }) }
                 composable("terminal") { TerminalScreen() }
                 composable("shortcuts") { ShortcutsScreen() }
                 composable("settings") { SettingsScreen(onAddPc = { nav.navigate("connect") }) }

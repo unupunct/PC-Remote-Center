@@ -72,7 +72,11 @@ fun ConnectScreen(onBack: (() -> Unit)?, onPaired: () -> Unit, vm: ConnectViewMo
     var port by rememberSaveable { mutableStateOf("47821") }
     var forgetPc by remember { mutableStateOf<SavedPc?>(null) }
 
+    var linkText by rememberSaveable { mutableStateOf("") }
+    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
     val scanner = rememberLauncherForActivityResult(ScanContract()) { result -> vm.onQrScanned(result.contents) }
+    val pendingLink by vm.pendingLink.collectAsState()
+    LaunchedEffect(pendingLink) { if (pendingLink != null) vm.consumePendingLink() }
 
     LaunchedEffect(Unit) { vm.startDiscovery() }
     LaunchedEffect(Unit) { vm.paired.collect { onPaired() } }
@@ -140,6 +144,8 @@ fun ConnectScreen(onBack: (() -> Unit)?, onPaired: () -> Unit, vm: ConnectViewMo
                                         .setPrompt("Scan the pairing QR code shown on the PC")
                                         .setBeepEnabled(false)
                                         .setOrientationLocked(false)
+                                        // accept normal AND inverted (light-on-dark) QR codes; older server builds drew inverted ones
+                                        .addExtra(com.google.zxing.client.android.Intents.Scan.SCAN_TYPE, com.google.zxing.client.android.Intents.Scan.MIXED_SCAN)
                                 )
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -147,6 +153,22 @@ fun ConnectScreen(onBack: (() -> Unit)?, onPaired: () -> Unit, vm: ConnectViewMo
                             Icon(Icons.Outlined.QrCodeScanner, null)
                             Spacer(Modifier.size(8.dp))
                             Text("Scan QR code")
+                        }
+                        Text(
+                            "Can't scan? On the PC press \"Copy pairing link\", send it to this phone (message, e-mail) and open it - or paste it here:",
+                            style = MaterialTheme.typography.bodySmall, color = Pc.TextSecondary,
+                        )
+                        OutlinedTextField(
+                            value = linkText, onValueChange = { linkText = it },
+                            label = { Text("Pairing link (pcrc://pair?...)") }, singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = { clipboard.getText()?.text?.let { linkText = it.trim() } }) { Text("Paste") }
+                            Button(
+                                onClick = { vm.onQrScanned(linkText); linkText = "" },
+                                enabled = linkText.isNotBlank(),
+                            ) { Text("Pair with link") }
                         }
                     }
                 }

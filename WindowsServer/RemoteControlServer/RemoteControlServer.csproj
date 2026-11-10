@@ -9,7 +9,7 @@
     <AssemblyName>RemoteControlServer</AssemblyName>
     <RootNamespace>RemoteControlServer.App</RootNamespace>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <AssemblyTitle>PC Remote Center Server</AssemblyTitle>
     <Product>PC Remote Center</Product>
     <NoWarn>$(NoWarn);NU1903</NoWarn>
@@ -25,7 +25,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RemoteControlServer.Core\RemoteControlServer.Core.csproj" />
-    <PackageReference Include="QRCoder" Version="1.6.0" />
     <Resource Include="Assets\app.ico" />
   </ItemGroup>
 </Project>

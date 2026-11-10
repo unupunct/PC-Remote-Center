@@ -69,6 +69,7 @@ import com.pcremote.center.ui.theme.Pc
 fun DashboardScreen(
     onOpenDetail: (String) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenProcesses: () -> Unit,
     onAddPc: () -> Unit,
     vm: DashboardViewModel = viewModel(),
 ) {
@@ -205,6 +206,14 @@ fun DashboardScreen(
                     ) { onOpenDetail("disk") }
                 }
             }
+        }
+
+        // ---- processes (mini task manager) ----
+        item {
+            OutlinedButton(
+                onClick = onOpenProcesses, enabled = connected && Permissions.MONITORING in perms,
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Processes - see what is running, end a program") }
         }
 
         // ---- actions ----

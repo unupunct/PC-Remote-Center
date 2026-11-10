@@ -4,7 +4,7 @@
 .EXAMPLE   pwsh -File Scripts\package-release.ps1 -SkipTests -SkipAndroid
 APK signing: build-android.ps1 -Release signs with the user's own keystore (AndroidClient\keystore.properties); no key is bundled.
 #>
-param([string]$Version = '1.1.0', [switch]$SkipTests, [switch]$SkipAndroid, [switch]$SkipWindowsBuild)
+param([string]$Version = '1.2.0', [switch]$SkipTests, [switch]$SkipAndroid, [switch]$SkipWindowsBuild, [switch]$IncludeDebugApk)
 $ErrorActionPreference = 'Stop'
 $root = Resolve-Path (Join-Path $PSScriptRoot '..')
 $dist = Join-Path $root 'dist'
@@ -31,10 +31,14 @@ Compress-Archive -Path (Join-Path $dist 'server\*') -DestinationPath $zip -Compr
 
 # --- APK(s)
 if (-not $SkipAndroid) {
-    foreach ($apk in Get-ChildItem (Join-Path $root 'AndroidClient\app\build\outputs\apk') -Recurse -Filter '*.apk' -ErrorAction SilentlyContinue) {
-        $name = if ($apk.FullName -match 'release') { if ($apk.Name -match 'unsigned') { "RemoteControlCenter-$Version-release-UNSIGNED.apk" } else { "RemoteControlCenter-$Version-release.apk" } } else { "RemoteControlCenter-$Version-debug.apk" }
-        Copy-Item $apk.FullName (Join-Path $rel $name) -Force
+    $apkDir = Join-Path $root 'AndroidClient\app\build\outputs\apk'
+    $signed = Join-Path $apkDir 'release\app-release.apk'
+    if (Test-Path $signed) { Copy-Item $signed (Join-Path $rel "RemoteControlCenter-$Version.apk") -Force }
+    elseif (Test-Path (Join-Path $apkDir 'release\app-release-unsigned.apk')) {
+        Write-Warning 'Only an UNSIGNED release APK exists (no AndroidClient\keystore.properties) - it cannot be installed; not adding it to the release.'
     }
+    else { Write-Warning 'No release APK found - run Scripts\build-android.ps1 -Release first.' }
+    if ($IncludeDebugApk) { Copy-Item (Join-Path $apkDir 'debug\app-debug.apk') (Join-Path $rel "RemoteControlCenter-$Version-debug.apk") -Force }
 }
 
 # --- checksums

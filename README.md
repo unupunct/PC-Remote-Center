@@ -23,14 +23,14 @@ Android screenshots will be added once the app has been checked on a physical ph
 
 ## Status
 
-**v1.1.0 is a pre-release.**
+**v1.2.0 is a pre-release.**
 
-* Windows server: **83 automated tests pass on real Windows hardware** (hardware sensors, real CMD/PowerShell sessions, TLS,
+* Windows server: **92 automated tests pass on real Windows hardware** (hardware sensors, real CMD/PowerShell sessions, TLS,
   pairing, revocation, power confirmation, shortcut validation, restart recovery, backup/restore). Not covered by automatic
   tests: lock, sleep, the firewall button (needs UAC), Wake-on-LAN, tray notifications.
-* Android app: builds, 56 JVM unit tests pass (protocol, terminal buffer, TLS pinning, QR parsing, Wake-on-LAN packet…).
+* Android app: builds, 59 JVM unit tests pass (protocol, terminal buffer, TLS pinning, QR parsing, Wake-on-LAN packet…).
   **It has not yet been exercised end-to-end against the server on a physical device** – please report problems via Issues.
-* The binaries are not code-signed (Windows SmartScreen will warn); the APK attached to the release is a *debug-signed* build.
+* The binaries are not code-signed (Windows SmartScreen will warn); the APK attached to the release is a release build signed with the project key (not Play Store signed).
 
 > ⚠️ A device with the *terminal* permission can run anything your Windows account can. Read [`Documentation/SECURITY.md`](Documentation/SECURITY.md).
 
@@ -41,6 +41,7 @@ Android screenshots will be added once the app has been checked on a physical ph
 | **Dashboard** | CPU (total, per-core, clock, temperature*), GPU (load, VRAM, temperature*), RAM, disks (usage, read/write speed, temperature*), animated gauges, history charts, warning thresholds |
 | **Terminals** | Persistent CMD + PowerShell (ConPTY). Commands run in the *existing* shell, keep their working directory, variables and history, stream output live, support Ctrl+C, clear, resize, interactive programs. Split or full-screen view on the phone; the same sessions are visible in terminal windows on the PC |
 | **System actions** | Restart / shutdown / sleep with server-enforced confirmation and countdown, cancel pending action, lock PC, Wake-on-LAN |
+| **Processes** | Mini task manager on the phone: live process list (CPU, memory, window title), search, sort, end a program (admin permission + confirmation, critical Windows processes protected) |
 | **Shortcuts** | Add, edit, reorder, delete shortcuts (Task Manager, Device Manager, Services, Event Viewer, Network Connections, Resource Monitor, Settings, browsers, VS Code …) – validated, never run through a shell |
 | **Security** | TLS with certificate pinning, one-time pairing codes + QR, hashed device tokens, per-device permissions, rate-limiting, LAN-only default, audit log, device revocation, no silent elevation |
 | **Remote access** | Tailscale and WireGuard aware: the server detects the adapters, shows their addresses, can accept connections arriving through them (opt-in, bound to the VPN adapter), puts them in the pairing QR; the app remembers the addresses and shows which path it uses. See [`NETWORKING.md`](Documentation/NETWORKING.md) |

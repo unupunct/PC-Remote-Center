@@ -104,6 +104,12 @@ total. Then drop lines with index < `scrollbackStart`. Set known total = `scroll
 `screen`; the cursor is at (`cursor.x`, `cursor.y`) inside `screen`. When `running` is false show "session ended"
 with a restart button.
 
+### Processes (`monitoring` to list, `admin` to end)
+* `process.list {sort?:"memory"|"cpu"|"name", limit?(1-300, default 60), filter?}` → `{total, sort, processes:[{pid, name, cpu?, memoryMb, threads, window?}]}`.
+  `cpu` (% of all cores) is measured between two reads and is **absent** when Windows does not allow reading it; the first call takes a ~0.4 s baseline.
+* `process.kill {pid, tree?:bool, confirmed:true}` → `{killed, pid, name}`. Without `confirmed:true` the server answers `confirmation_required`.
+  Critical Windows processes (System, smss, csrss, wininit, services, lsass, winlogon, dwm, svchost …) and the server itself are refused with `forbidden`. Audited by name + pid.
+
 ### System actions (`power`)
 Restart, shutdown and sleep are two-step; **the server enforces confirmation**:
 * `power.request {action:"restart"|"shutdown"|"sleep", delaySeconds?(5-600, default 30)}` → `{confirmationToken, action, delaySeconds, expiresInSeconds:30}` (nothing happens yet)
@@ -132,3 +138,7 @@ A discovered server is **not trusted**: pairing/login still requires the code or
 
 `pcrc://pair?v=1&h=192.168.1.20,10.0.0.5&p=47821&c=12345678&f=<SHA256 hex>&n=<computer name, url-encoded>`
 (`h` = comma separated addresses to try, `c` = one-time code). Scanning it gives the client everything for `auth.pair`.
+
+The QR image is drawn **black on white with a 4-module quiet zone** (error correction L) so any scanner reads it; clients should still
+accept inverted codes. The same string can be shared as a link: the Android app registers `pcrc://pair` as a deep link and also has a
+"paste pairing link" field.

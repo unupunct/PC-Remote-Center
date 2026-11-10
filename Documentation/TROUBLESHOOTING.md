@@ -16,6 +16,15 @@ the app under *Activity Logs*.
 | Phone paired at home does not know the VPN address | Connect once on the LAN after enabling the VPN option (the app learns the address), or add the address under *Settings → Add address*. |
 | 403 / refused from another VPN (OpenVPN, ZeroTier …) | Add that VPN's subnet to *Network Settings → Extra allowed networks*. |
 
+## The phone does not scan the QR code
+| Symptom | Fix |
+|---|---|
+| Camera opens but nothing happens | Use version 1.2.0 or newer **on both sides**: older servers drew an inverted (light-on-dark) QR that most scanners ignore. The PC now draws black-on-white. |
+| Still not reading | Make the PC window large, raise the screen brightness, hold the phone 20-30 cm away and let the camera focus. Avoid glare and Windows "night light" tints. |
+| Camera permission was denied | Android *Settings → Apps → PC Remote Center → Permissions → Camera → Allow*. |
+| Cannot scan at all | On the PC press **Copy pairing link**, send it to the phone (message, e-mail, notes), tap it (opens the app) or paste it under *Connect a PC → Pair with link*. Or scan the QR with the phone's normal camera app – it offers to open PC Remote Center. |
+| "Not a pairing QR code" | The code expired or was cancelled – generate a new one. The QR only works once and for 5 minutes. |
+
 ## Server
 | Symptom | Fix |
 |---|---|

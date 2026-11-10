@@ -15,6 +15,7 @@ public sealed class ServerRuntime : IDisposable
     public TerminalManager Terminals { get; }
     public PowerService Power { get; }
     public ShortcutService Shortcuts { get; }
+    public ProcessService Processes { get; }
 
     public ServerRuntime(string? dataDir = null, ISystemActions? systemActions = null, IProcessLauncher? launcher = null)
         : this(new ServerCore(dataDir), systemActions, launcher) { }
@@ -31,6 +32,7 @@ public sealed class ServerRuntime : IDisposable
         Terminals = new TerminalManager(Core);
         Power = new PowerService(Core, systemActions);
         Shortcuts = new ShortcutService(Core, launcher);
+        Processes = new ProcessService(Core);
 
         Core.Handlers.Register("wol.info", Permission.Monitoring, (c, e) =>
         {

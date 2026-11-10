@@ -46,6 +46,13 @@ data class PairDialogState(
 class ConnectViewModel(app: Application) : AndroidViewModel(app) {
     private val container = (app as PcRemoteApp).container
 
+    val pendingLink = container.pendingPairLink
+    fun consumePendingLink() {
+        val link = container.pendingPairLink.value ?: return
+        container.pendingPairLink.value = null
+        onQrScanned(link)
+    }
+
     val savedPcs = container.store.pcs
     val activeId = container.store.activeId
 

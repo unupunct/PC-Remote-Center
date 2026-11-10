@@ -234,12 +234,10 @@ public sealed class AppViewModel : Bindable, IDisposable
         if (offer == null) { PairCode = ""; PairQr = null; PairUri = ""; PairInfo = "No active pairing code"; return; }
         PairCode = offer.Code.Insert(4, " ");
         VpnDetector.InvalidateCache();
-        var hosts = string.Join(',', VpnDetector.PairingHosts(VpnDetector.CachedDetect(), Core.Settings.AllowTailscale, Core.Settings.AllowWireGuard).Select(a => a.ToString()));
-        if (hosts.Length == 0) hosts = string.Join(',', NetworkInfo.LocalAddresses().Select(a => a.ToString()));
-        PairUri = $"pcrc://pair?v=1&h={Uri.EscapeDataString(hosts)}&p={Core.ListeningPort}&c={offer.Code}&f={Core.Certs.Fingerprint}&n={Uri.EscapeDataString(Core.Settings.ComputerName)}";
-        using var gen = new QRCodeGenerator();
-        var data = gen.CreateQrCode(PairUri, QRCodeGenerator.ECCLevel.M);
-        var png = new PngByteQRCode(data).GetGraphic(12, [0xE6, 0xE9, 0xF0], [0x0B, 0x0C, 0x10]);
+        var hostList = VpnDetector.PairingHosts(VpnDetector.CachedDetect(), Core.Settings.AllowTailscale, Core.Settings.AllowWireGuard);
+        if (hostList.Count == 0) hostList = NetworkInfo.LocalAddresses();
+        PairUri = PairingQr.BuildUri(hostList, Core.ListeningPort, offer.Code, Core.Certs.Fingerprint, Core.Settings.ComputerName);
+        var png = PairingQr.RenderPng(PairUri); // black on white with quiet zone: readable by every scanner
         var bmp = new BitmapImage();
         using (var ms = new MemoryStream(png)) { bmp.BeginInit(); bmp.CacheOption = BitmapCacheOption.OnLoad; bmp.StreamSource = ms; bmp.EndInit(); }
         bmp.Freeze();

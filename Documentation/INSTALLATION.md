@@ -23,9 +23,14 @@ The window minimises to the system-tray icon; the server keeps running.
 *Network Settings → Create firewall rule…* (UAC prompt; private networks and local subnet only). See `NETWORKING.md`.
 
 ## 3. Install the Android app
-Download **`RemoteControlCenter-<version>-release.apk`** (or `-debug.apk`) to the phone and open it. Android asks you to allow
+Download **`RemoteControlCenter-<version>.apk`** (signed release build) to the phone and open it. Android asks you to allow
 installs from that source ("Install unknown apps"); allow it only for the browser/file manager you used.
-Alternatively via USB debugging: `adb install -r RemoteControlCenter-<version>-release.apk`.
+Alternatively via USB debugging: `adb install -r RemoteControlCenter-<version>.apk`.
+
+The release APK is signed with the project's release key (certificate SHA-256
+`A3:F2:23:ED:6B:DE:8E:9B:A1:98:5F:3E:7B:43:0C:47:27:31:8F:D9:75:32:AA:C3:2A:E2:56:78:4F:78:44:84`; check with
+`apksigner verify --print-certs`). **Upgrading from the 1.0/1.1 debug APKs:** Android refuses to update an app that was signed with a
+different key, so uninstall the old app first (you will need to pair again). Updates from 1.2.0 on install over the top.
 
 ## 4. Pair
 1. PC: *Connected Devices* → tick what the phone may do → **Generate pairing code** (QR + 8 digits, valid 5 min).

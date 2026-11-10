@@ -190,7 +190,7 @@
                     <TextBlock Text="Connected Devices" Style="{StaticResource H1}"/>
                     <TextBlock Text="Pair a phone with a one-time code or QR code, choose what it may do, and revoke access at any time." Style="{StaticResource Muted}" Margin="0,2,0,16"/>
                     <Border Style="{StaticResource Card}" Margin="0,0,0,14">
-                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="260"/></Grid.ColumnDefinitions>
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="340"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Pair a new device" Style="{StaticResource H2}"/>
                                 <TextBlock Text="This device will be allowed to:" Style="{StaticResource Muted}" Margin="0,8,0,4"/>
@@ -201,13 +201,14 @@
                                 <CheckBox x:Name="chkAdmin" Content="Administrative actions (edit shortcuts, elevated launches if enabled)" IsChecked="True"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                                     <Button Content="Generate pairing code" Style="{StaticResource Primary}" Click="OnCreatePairing"/>
+                                    <Button Content="Copy pairing link" Margin="8,0,0,0" Click="OnCopyPairLink" ToolTip="Send this link to the phone (message/e-mail) and open it there if scanning is not possible. It contains the one-time code."/>
                                     <Button Content="Cancel code" Margin="8,0,0,0" Click="OnCancelPairing"/></StackPanel>
                                 <TextBlock Text="{Binding PairInfo}" Style="{StaticResource Muted}" Margin="0,10,0,0" TextWrapping="Wrap"/>
                                 <TextBlock Text="{Binding PairCode}" FontSize="40" FontWeight="Bold" FontFamily="Consolas" Foreground="{StaticResource CyanBrush}" Margin="0,4,0,0"/>
                                 <TextBlock Text="Certificate fingerprint (SHA-256) — compare on the phone if you pair without the QR code:" Style="{StaticResource Muted}" FontSize="11" Margin="0,10,0,2" TextWrapping="Wrap"/>
                                 <TextBox Text="{Binding Fingerprint, Mode=OneWay}" IsReadOnly="True" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"/>
                             </StackPanel>
-                            <Border Grid.Column="1" Background="#0B0C10" CornerRadius="12" Padding="10" Height="240" VerticalAlignment="Top">
+                            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="6" Height="330" VerticalAlignment="Top">
                                 <Grid><Image Source="{Binding PairQr}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                                     <TextBlock Text="QR code appears here" Style="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding NoQrVisibility}"/></Grid></Border>
                         </Grid></Border>
